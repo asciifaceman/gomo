@@ -43,3 +43,12 @@ IP6: redacted
   Band:   n41
   CellID: redacted
 ```
+
+# TODO
+* Hook up to time series datasource
+
+# Author
+Charles Corbett <github.com/asciifaceman>
+
+# Thanks
+* Karl Q
