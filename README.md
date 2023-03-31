@@ -47,6 +47,13 @@ IP6: redacted
 # TODO
 * Hook up to time series datasource
 
+# Dependencies
+* spf13/cobra
+* spf13/viper
+* davecgh/go-spew
+* [prometheus-community/pro-bing](https://github.com/prometheus-community/pro-bing)
+  * provides a tool to ping remote hosts with windows support
+
 # Author
 Charles Corbett <github.com/asciifaceman>
 
