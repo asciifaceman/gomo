@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/asciifaceman/gomo/pkg/status"
 	"github.com/asciifaceman/gomo/pkg/tmo"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/spf13/cobra"
@@ -50,7 +51,21 @@ var rootCmd = &cobra.Command{
 			return
 		}
 
+		s := status.NewStatus(5, status.DefaultPingHosts)
+		report, err := s.Run()
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		fmt.Println("Ping report")
+		for _, host := range report {
+			fmt.Printf("== %s =======================\n", host.Hostname)
+			fmt.Printf("  Packet Loss: %5v\n", host.PacketLoss)
+			fmt.Printf("  Avg. Response Time: %5v\n", host.AverageResponseTime)
+		}
+
 		if pretty {
+			fmt.Println("")
 			fmt.Printf("Stats for %s\n", hostname)
 			fmt.Printf("Connected: %d\n", data.ApCfg[0].ConnectionState)
 			fmt.Printf("IP6: %s\n", data.ApCfg[0].IPV6)
