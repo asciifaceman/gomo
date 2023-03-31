@@ -13,6 +13,7 @@ import (
 	"github.com/asciifaceman/gomo/pkg/models"
 	"github.com/asciifaceman/gomo/pkg/status"
 	"github.com/asciifaceman/gomo/pkg/tmo"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
@@ -43,6 +44,30 @@ var (
 		Subsystem: "5g",
 		Name:      "rsrq",
 		Help:      "The current RSRQ of the 5G radio at this point in time. dBm",
+	}, cellLabels)
+	RSSILTE = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: "gomo",
+		Subsystem: "lte",
+		Name:      "rssi",
+		Help:      "The current RSSI of the LTE radio at this point in time. dBm",
+	}, cellLabels)
+	SNRLTE = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: "gomo",
+		Subsystem: "lte",
+		Name:      "snr",
+		Help:      "The current SNR of the LTE radio at this point in time. dB",
+	}, cellLabels)
+	RSRPLTE = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: "gomo",
+		Subsystem: "lte",
+		Name:      "rsrp",
+		Help:      "The current RSRP of the LTE radio at this point in time. dBm",
+	}, cellLabels)
+	RSRQLTE = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: "gomo",
+		Subsystem: "lte",
+		Name:      "rsrq",
+		Help:      "The current RSRQ of the LTE radio at this point in time. dB",
 	}, cellLabels)
 )
 
@@ -100,6 +125,10 @@ func (g *Gotmo) RegisterPrometheus() {
 	prometheus.MustRegister(SNR5G)
 	prometheus.MustRegister(RSRP5G)
 	prometheus.MustRegister(RSRQ5G)
+	prometheus.MustRegister(RSSILTE)
+	prometheus.MustRegister(SNRLTE)
+	prometheus.MustRegister(RSRPLTE)
+	prometheus.MustRegister(RSRQLTE)
 }
 
 // Daemon runs Gomo as a server continuously gathering metrics for prometheus
@@ -150,6 +179,23 @@ func (g *Gotmo) Daemon() error {
 				LabelCellID: ret.Body.Cell5GStats[0].Stat.PhysicalCellID,
 				LabelBand:   ret.Body.Cell5GStats[0].Stat.Band,
 			}).Set(float64(ret.Body.Cell5GStats[0].Stat.RSRQCurrent))
+
+			RSSILTE.With(prometheus.Labels{
+				LabelCellID: ret.Body.Cell5GStats[0].Stat.PhysicalCellID,
+				LabelBand:   ret.Body.Cell5GStats[0].Stat.Band,
+			}).Set(float64(ret.Body.CellLTEStats[0].Stat.RSSICurrent))
+			SNRLTE.With(prometheus.Labels{
+				LabelCellID: ret.Body.Cell5GStats[0].Stat.PhysicalCellID,
+				LabelBand:   ret.Body.Cell5GStats[0].Stat.Band,
+			}).Set(float64(ret.Body.CellLTEStats[0].Stat.SNRCurrent))
+			RSRPLTE.With(prometheus.Labels{
+				LabelCellID: ret.Body.Cell5GStats[0].Stat.PhysicalCellID,
+				LabelBand:   ret.Body.Cell5GStats[0].Stat.Band,
+			}).Set(float64(ret.Body.CellLTEStats[0].Stat.RSRPCurrent))
+			RSRQLTE.With(prometheus.Labels{
+				LabelCellID: ret.Body.Cell5GStats[0].Stat.PhysicalCellID,
+				LabelBand:   ret.Body.Cell5GStats[0].Stat.Band,
+			}).Set(float64(ret.Body.CellLTEStats[0].Stat.RSRQCurrent))
 		}
 	}
 
@@ -185,7 +231,7 @@ func (g *Gotmo) StopHTTPServer() {
 }
 
 // CLIEntry runs Gomo as a single pass and displays the responses
-func (g *Gotmo) CLIEntry() {
+func (g *Gotmo) CLIEntry(pretty bool) {
 	var wg sync.WaitGroup
 
 	// Start radio status report
@@ -208,19 +254,24 @@ func (g *Gotmo) CLIEntry() {
 	close(g.PingReturnChannel)
 	radioStatus := <-g.FastmileReturnChannel
 
-	g.Printer.PrintHeader("LTE")
-	g.Printer.PrintKVIndent("RSSI", radioStatus.Body.CellLTEStats[0].Stat.RSSICurrent)
-	g.Printer.PrintKVIndent("SNR", radioStatus.Body.CellLTEStats[0].Stat.SNRCurrent)
-	g.Printer.PrintKVIndent("RSRP", radioStatus.Body.CellLTEStats[0].Stat.RSRPCurrent)
-	g.Printer.PrintKVIndent("RSRQ", radioStatus.Body.CellLTEStats[0].Stat.RSRQCurrent)
-	g.Printer.PrintKVIndent("Band", radioStatus.Body.CellLTEStats[0].Stat.Band)
-	g.Printer.PrintKVIndent("CellID", radioStatus.Body.CellLTEStats[0].Stat.PhysicalCellID)
-	g.Printer.PrintHeader("5G")
-	g.Printer.PrintKVIndent("SNR", radioStatus.Body.Cell5GStats[0].Stat.SNRCurrent)
-	g.Printer.PrintKVIndent("RSRP", radioStatus.Body.Cell5GStats[0].Stat.RSRPCurrent)
-	g.Printer.PrintKVIndent("RSRQ", radioStatus.Body.Cell5GStats[0].Stat.RSRQCurrent)
-	g.Printer.PrintKVIndent("Band", radioStatus.Body.Cell5GStats[0].Stat.Band)
-	g.Printer.PrintKVIndent("CellID", radioStatus.Body.Cell5GStats[0].Stat.PhysicalCellID)
+	if pretty {
+		g.Printer.PrintHeader("LTE")
+		g.Printer.PrintKVIndent("RSSI", radioStatus.Body.CellLTEStats[0].Stat.RSSICurrent)
+		g.Printer.PrintKVIndent("SNR", radioStatus.Body.CellLTEStats[0].Stat.SNRCurrent)
+		g.Printer.PrintKVIndent("RSRP", radioStatus.Body.CellLTEStats[0].Stat.RSRPCurrent)
+		g.Printer.PrintKVIndent("RSRQ", radioStatus.Body.CellLTEStats[0].Stat.RSRQCurrent)
+		g.Printer.PrintKVIndent("Band", radioStatus.Body.CellLTEStats[0].Stat.Band)
+		g.Printer.PrintKVIndent("CellID", radioStatus.Body.CellLTEStats[0].Stat.PhysicalCellID)
+		g.Printer.PrintHeader("5G")
+		g.Printer.PrintKVIndent("SNR", radioStatus.Body.Cell5GStats[0].Stat.SNRCurrent)
+		g.Printer.PrintKVIndent("RSRP", radioStatus.Body.Cell5GStats[0].Stat.RSRPCurrent)
+		g.Printer.PrintKVIndent("RSRQ", radioStatus.Body.Cell5GStats[0].Stat.RSRQCurrent)
+		g.Printer.PrintKVIndent("Band", radioStatus.Body.Cell5GStats[0].Stat.Band)
+		g.Printer.PrintKVIndent("CellID", radioStatus.Body.Cell5GStats[0].Stat.PhysicalCellID)
+	} else {
+		spew.Dump(radioStatus.Body)
+	}
+
 	g.Printer.PrintHeader("Ping Tests")
 	for report := range g.PingReturnChannel {
 		if report.Error != nil {

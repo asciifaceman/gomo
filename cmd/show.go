@@ -31,7 +31,7 @@ to quickly create a Cobra application.`,
 
 		g.Printer.PrintHeader(fmt.Sprintf("GOMO %s", version))
 
-		g.CLIEntry()
+		g.CLIEntry(pretty)
 	},
 }
 

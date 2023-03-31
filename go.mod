@@ -3,6 +3,7 @@ module github.com/asciifaceman/gomo
 go 1.18
 
 require (
+	github.com/davecgh/go-spew v1.1.1
 	github.com/prometheus-community/pro-bing v0.1.0
 	github.com/prometheus/client_golang v1.14.0
 	github.com/spf13/cobra v1.6.1
