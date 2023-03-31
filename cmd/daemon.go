@@ -7,6 +7,7 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/asciifaceman/gomo/pkg/gotmo"
 	"github.com/spf13/cobra"
 )
 
@@ -18,7 +19,14 @@ var daemonCmd = &cobra.Command{
 discovered metrics into prometheus time series for graphing and
 historical analysis.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("daemon called")
+		g, err := gotmo.NewGotmo(hostname, reqtimeout, pingtargets, pingWorkerCount)
+		if err != nil {
+			fmt.Printf("Failed to setup: %v", err)
+		}
+		err = g.Daemon()
+		if err != nil {
+			g.Logger.Errorw("Exited with error", "error", err)
+		}
 	},
 }
 
