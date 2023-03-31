@@ -1,0 +1,15 @@
+version: "3.3"
+services:
+  prometheus:
+    image: "ghcr.io/danopstech/prometheus:latest"
+    restart: always
+    user: "root"
+    ports:
+      - "9090:9090"
+    volumes:
+      - type: bind
+        source: ./config/prometheus/prometheus.yml
+        target: /etc/prometheus/prometheus.yml
+      - type: bind
+        source: ./data/prometheus
+        target: /prometheus

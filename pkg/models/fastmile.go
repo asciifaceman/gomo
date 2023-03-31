@@ -7,6 +7,11 @@ package models
 	RSSI dBm
 */
 
+type FastmileReturn struct {
+	Error error
+	Body  *FastmileRadioStatus
+}
+
 type FastmileRadioStatus struct {
 	ConnectionStatus []*ConnectionStatus `json:"connection_status"`
 	ApCfg            []*ApnCfg           `json:"apn_cfg"`

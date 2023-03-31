@@ -9,11 +9,13 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/asciifaceman/gomo/pkg/models"
 	probing "github.com/prometheus-community/pro-bing"
 )
 
 var (
-	DefaultPingHosts = []string{"www.google.com", "github.com"}
+	DefaultPingHosts   = []string{"www.google.com", "github.com"}
+	DefaultWorkerCount = 2
 )
 
 type Status struct {
@@ -23,12 +25,6 @@ type Status struct {
 	PingStatChannel chan *probing.Statistics
 	Signals         chan os.Signal
 	PingHosts       []string
-}
-
-type PingReport struct {
-	Hostname            string
-	PacketLoss          float64
-	AverageResponseTime time.Duration
 }
 
 func NewStatus(pingCount int, pingHosts []string) *Status {
@@ -46,49 +42,41 @@ func NewStatus(pingCount int, pingHosts []string) *Status {
 	return s
 }
 
-func (s *Status) Run() ([]*PingReport, error) {
-	var wg sync.WaitGroup
-	var report []*PingReport
-
-	for _, hostname := range s.PingHosts {
-		wg.Add(1)
-		go s.Ping(&wg, hostname)
-	}
-
-	wg.Wait()
-	close(s.PingStatChannel)
-
-	for stat := range s.PingStatChannel {
-		r := &PingReport{
-			Hostname:            stat.Addr,
-			PacketLoss:          stat.PacketLoss,
-			AverageResponseTime: stat.AvgRtt,
-		}
-		report = append(report, r)
-	}
-
-	return report, nil
-}
-
-// Ping sets up a goroutine pinger for the given hostname and n count
-func (s *Status) Ping(wg *sync.WaitGroup, hostname string) {
+// PingAsync ...
+func (s *Status) PingAsync(wg *sync.WaitGroup, work chan string, ret chan *models.PingReportReturn) {
 	defer wg.Done()
-	pinger, err := probing.NewPinger(hostname)
-	if err != nil {
-		s.ErrorChannel <- err
-	}
-	pinger.Count = s.PingCount
-
-	go func() {
-		for range s.Signals {
-			pinger.Stop()
+	for hostname := range work {
+		result := &models.PingReportReturn{}
+		pinger, err := probing.NewPinger(hostname)
+		if err != nil {
+			result.Error = err
+			ret <- result
+			continue
 		}
-	}()
+		pinger.Count = s.PingCount
+		pinger.Timeout = 15 * time.Second
 
-	err = pinger.Run()
-	if err != nil {
-		s.ErrorChannel <- err
+		go func() {
+			for range s.Signals {
+				pinger.Stop()
+			}
+		}()
+
+		err = pinger.Run()
+		if err != nil {
+			result.Error = err
+			ret <- result
+			continue
+		}
+
+		stats := pinger.Statistics()
+
+		result.Body = &models.PingReport{
+			Hostname:        stats.Addr,
+			PacketsSent:     stats.PacketsSent,
+			PacketLoss:      stats.PacketLoss,
+			AvgResponseTime: stats.AvgRtt,
+		}
+		ret <- result
 	}
-	stats := pinger.Statistics()
-	s.PingStatChannel <- stats
 }

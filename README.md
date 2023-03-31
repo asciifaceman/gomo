@@ -54,8 +54,9 @@ IP6: redacted
 * [prometheus-community/pro-bing](https://github.com/prometheus-community/pro-bing)
   * provides a tool to ping remote hosts with windows support
 
-# Author
-Charles Corbett <github.com/asciifaceman>
+# Authors
+* Charles Corbett <github.com/asciifaceman>
+
 
 # Thanks
 * Karl Q

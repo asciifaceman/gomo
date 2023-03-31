@@ -6,11 +6,15 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"sync"
+	"time"
 
 	"github.com/asciifaceman/gomo/pkg/models"
 )
 
 const (
+	defaultTimeout = 15 * time.Second
+
 	HeaderUserAgent      = "Mozilla/5.0 (Windows NT 10.0; rv:111.0) Gecko/20100101 Firefox/111.0"
 	HeaderAccept         = "application/json"
 	HeaderAcceptLanguage = "en-US,en;q=0.5"
@@ -21,28 +25,54 @@ const (
 	URIFastmile = "fastmile_radio_status_web_app.cgi"
 )
 
-type Client struct {
+// Trashcan defines some methods for interacting with the tmo trashcan
+type Trashcan struct {
 	client   *http.Client
 	Hostname string
 }
 
-func NewClient(hostname string) (*Client, error) {
+// NewTrashcan returns a configured Trashcan client
+func NewTrashcan(hostname string, timeout time.Duration) (*Trashcan, error) {
+	if timeout == 0 {
+		timeout = defaultTimeout
+	}
+
 	_, err := url.Parse(hostname)
 	if err != nil {
 		return nil, err
 	}
 
-	c := &Client{
+	t := &Trashcan{
 		Hostname: hostname,
-		client:   http.DefaultClient,
+		client: &http.Client{
+			Timeout: timeout,
+		},
 	}
 
-	return c, nil
+	return t, nil
 }
 
-// FetchRadioStatus ...
-func (c *Client) FetchRadioStatus() (*models.FastmileRadioStatus, error) {
-	reqURI, err := url.Parse(fmt.Sprintf("%s/%s", c.Hostname, URIFastmile))
+// FetchRadioStatusAsync is for running in a goroutine
+func (t *Trashcan) FetchRadioStatusAsync(wg *sync.WaitGroup, ret chan *models.FastmileReturn) {
+	defer wg.Done()
+	response := &models.FastmileReturn{}
+
+	data, err := t.FetchRadioStatus()
+	if err != nil {
+		response.Error = err
+		ret <- response
+		return
+	}
+
+	response.Body = data
+
+	ret <- response
+}
+
+// FetchRadioStatus fetches the radio status cgi page and returns a payload of
+// radio data
+func (t *Trashcan) FetchRadioStatus() (*models.FastmileRadioStatus, error) {
+	reqURI, err := url.Parse(fmt.Sprintf("%s/%s", t.Hostname, URIFastmile))
 	if err != nil {
 		return nil, err
 	}
@@ -58,9 +88,9 @@ func (c *Client) FetchRadioStatus() (*models.FastmileRadioStatus, error) {
 	req.Header.Add("Accept-Encoding", HeaderAcceptEncoding)
 	req.Header.Add("Content-Type", HeaderContentType)
 	req.Header.Add("Connection", HeaderConnection)
-	req.Header.Add("Referer", fmt.Sprintf("%s/web_whw", c.Hostname))
+	req.Header.Add("Referer", fmt.Sprintf("%s/web_whw", t.Hostname))
 
-	resp, err := c.client.Do(req)
+	resp, err := t.client.Do(req)
 	if err != nil {
 		return nil, err
 	}
