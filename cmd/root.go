@@ -19,8 +19,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/asciifaceman/gomo/pkg/tmo"
-	"github.com/davecgh/go-spew/spew"
+	"github.com/asciifaceman/gomo/pkg/status"
 	"github.com/spf13/cobra"
 
 	"github.com/spf13/viper"
@@ -28,7 +27,9 @@ import (
 
 var cfgFile string
 var hostname string
-var pretty bool
+var pingtargets []string
+var reqtimeout int
+var pingWorkerCount int
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -37,7 +38,9 @@ var rootCmd = &cobra.Command{
 	Long:  `Fetch and log trashcan data to a long term data store for analyzing`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
-	Run: func(cmd *cobra.Command, args []string) {
+	//Run: func(cmd *cobra.Command, args []string) {
+
+	/*
 		c, err := tmo.NewClient(hostname)
 		if err != nil {
 			fmt.Println(err)
@@ -50,7 +53,23 @@ var rootCmd = &cobra.Command{
 			return
 		}
 
+		//		s := status.NewStatus(5, status.DefaultPingHosts)
+		//		report, err := s.Run()
+		//		if err != nil {
+		//			fmt.Println(err)
+		//			return
+		//		}
+		//		fmt.Println("Ping report")
+		//		for _, host := range report {
+		//			fmt.Printf("== %s =======================\n", host.Hostname)
+		//			fmt.Printf("  Packet Loss: %5v\n", host.PacketLoss)
+		//			fmt.Printf("  Avg. Response Time: %5v\n", host.AverageResponseTime)
+		//		}
+
+		// clio.NewPrinter(clio.DefaultHeaderWidth, clio.DefaultKVWidth, 2)
+
 		if pretty {
+			fmt.Println("")
 			fmt.Printf("Stats for %s\n", hostname)
 			fmt.Printf("Connected: %d\n", data.ApCfg[0].ConnectionState)
 			fmt.Printf("IP6: %s\n", data.ApCfg[0].IPV6)
@@ -71,8 +90,9 @@ var rootCmd = &cobra.Command{
 		} else {
 			spew.Dump(data)
 		}
+	*/
 
-	},
+	//},
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -90,7 +110,9 @@ func init() {
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.gomo.yaml)")
 	rootCmd.PersistentFlags().StringVarP(&hostname, "hostname", "u", "http://192.168.12.1", "hostname of your tmobile trashcan")
-	rootCmd.PersistentFlags().BoolVar(&pretty, "pretty", false, "Whether to just print radio data or not")
+	rootCmd.PersistentFlags().IntVarP(&reqtimeout, "timeout", "s", 15, "timeout in seconds for outbound requests")
+	rootCmd.PersistentFlags().StringSliceVarP(&pingtargets, "targets", "p", status.DefaultPingHosts, "List of hostnames to target with ping test")
+	rootCmd.PersistentFlags().IntVarP(&pingWorkerCount, "workers", "w", status.DefaultWorkerCount, "number of workers for pingers")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.

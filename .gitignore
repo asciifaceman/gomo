@@ -22,3 +22,7 @@ go.work
 
 # Builds
 target/
+
+# Data contents
+data/prometheus/*
+data/grafana/*
