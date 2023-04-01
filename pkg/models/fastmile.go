@@ -1,11 +1,22 @@
 package models
 
+import "github.com/asciifaceman/gomo/pkg/helpers"
+
 /*
 	RSRP dBm
 	SNR dB
 	RSRQ dB
 	RSSI dBm
 */
+
+const (
+	SNR_LOWER_BOUND  = -20
+	SNR_UPPER_BOUND  = 20
+	RSRP_LOWER_BOUND = -115
+	RSRP_UPPER_BOUND = -80
+	RSRQ_LOWER_BOUND = -20
+	RSRQ_UPPER_BOUND = -10
+)
 
 type FastmileReturn struct {
 	Error error
@@ -85,6 +96,37 @@ type Cell5GStat struct {
 	Band                     string `json:"Band"`
 }
 
+func (c *Cell5GStat) SNRQuality(min float64, max float64) float64 {
+	if c.SNRCurrent < SNR_LOWER_BOUND {
+		return min
+	}
+	if c.SNRCurrent > SNR_UPPER_BOUND {
+		return max
+	}
+	return helpers.NumMap(float64(c.SNRCurrent), float64(SNR_LOWER_BOUND), float64(SNR_UPPER_BOUND), float64(min), float64(max))
+
+}
+
+func (c *Cell5GStat) RSRPQuality(min float64, max float64) float64 {
+	if c.RSRPCurrent < RSRP_LOWER_BOUND {
+		return min
+	}
+	if c.RSRPCurrent > RSRP_UPPER_BOUND {
+		return max
+	}
+	return helpers.NumMap(float64(c.RSRPCurrent), float64(RSRP_LOWER_BOUND), float64(RSRP_UPPER_BOUND), float64(min), float64(max))
+}
+
+func (c *Cell5GStat) RSRQQuality(min float64, max float64) float64 {
+	if c.RSRQCurrent < RSRQ_LOWER_BOUND {
+		return min
+	}
+	if c.RSRQCurrent > RSRQ_UPPER_BOUND {
+		return max
+	}
+	return helpers.NumMap(float64(c.RSRQCurrent), float64(RSRQ_LOWER_BOUND), float64(RSRQ_UPPER_BOUND), min, max)
+}
+
 type CellLTEStats struct {
 	Stat *CellLTEStat `json:"stat"`
 }
@@ -99,4 +141,35 @@ type CellLTEStat struct {
 	DownlinkEarfcn           int    `json:"DownlinkEarfcn"`
 	SignalStrengthLevel      int    `json:"SignalStrengthLevel"`
 	Band                     string `json:"Band"`
+}
+
+func (c *CellLTEStat) SNRQuality(min float64, max float64) float64 {
+	if c.SNRCurrent < SNR_LOWER_BOUND {
+		return min
+	}
+	if c.SNRCurrent > SNR_UPPER_BOUND {
+		return max
+	}
+	return helpers.NumMap(float64(c.SNRCurrent), float64(SNR_LOWER_BOUND), float64(SNR_UPPER_BOUND), float64(min), float64(max))
+
+}
+
+func (c *CellLTEStat) RSRPQuality(min float64, max float64) float64 {
+	if c.RSRPCurrent < RSRP_LOWER_BOUND {
+		return min
+	}
+	if c.RSRPCurrent > RSRP_UPPER_BOUND {
+		return max
+	}
+	return helpers.NumMap(float64(c.RSRPCurrent), float64(RSRP_LOWER_BOUND), float64(RSRP_UPPER_BOUND), float64(min), float64(max))
+}
+
+func (c *CellLTEStat) RSRQQuality(min float64, max float64) float64 {
+	if c.RSRQCurrent < RSRQ_LOWER_BOUND {
+		return min
+	}
+	if c.RSRQCurrent > RSRQ_UPPER_BOUND {
+		return max
+	}
+	return helpers.NumMap(float64(c.RSRQCurrent), float64(RSRQ_LOWER_BOUND), float64(RSRQ_UPPER_BOUND), min, max)
 }

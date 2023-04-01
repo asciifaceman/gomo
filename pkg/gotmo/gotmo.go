@@ -230,6 +230,21 @@ func (g *Gotmo) StopHTTPServer() {
 	//}
 }
 
+// AlignEntry runs Gomo as a fast continuous poll and returns data for visualization to align an antenna
+func (g *Gotmo) AlignEntry() *models.FastmileRadioStatus {
+	var wg sync.WaitGroup
+	g.FastmileReturnChannel = make(chan *models.FastmileReturn, 1)
+
+	go g.Trashcan.FetchRadioStatusAsync(&wg, g.FastmileReturnChannel)
+	wg.Add(1)
+
+	wg.Wait()
+	close(g.FastmileReturnChannel)
+	radioStatus := <-g.FastmileReturnChannel
+	return radioStatus.Body
+
+}
+
 // CLIEntry runs Gomo as a single pass and displays the responses
 func (g *Gotmo) CLIEntry(pretty bool) {
 	var wg sync.WaitGroup
@@ -283,6 +298,15 @@ func (g *Gotmo) CLIEntry(pretty bool) {
 		g.Printer.PrintKVIndent("Packet Loss", report.Body.PacketLoss)
 		g.Printer.PrintKVIndent("Avg. Response Time", report.Body.AvgResponseTime)
 	}
+
+	g.Printer.PrintHeader("5G")
+	g.Printer.PrintKVIndent("SNR Quality", radioStatus.Body.Cell5GStats[0].Stat.SNRQuality(0, 1))
+	g.Printer.PrintKVIndent("RSRP Quality", radioStatus.Body.Cell5GStats[0].Stat.RSRPQuality(0, 1))
+	g.Printer.PrintKVIndent("RSRQ Quality", radioStatus.Body.Cell5GStats[0].Stat.RSRQQuality(0, 1))
+	g.Printer.PrintHeader("LTE")
+	g.Printer.PrintKVIndent("SNR Quality", radioStatus.Body.CellLTEStats[0].Stat.SNRQuality(0, 1))
+	g.Printer.PrintKVIndent("RSRP Quality", radioStatus.Body.CellLTEStats[0].Stat.RSRPQuality(0, 1))
+	g.Printer.PrintKVIndent("RSRQ Quality", radioStatus.Body.CellLTEStats[0].Stat.RSRQQuality(0, 1))
 }
 
 // SetupLogger will attach a logger to Gotmo for daemon use
