@@ -32,13 +32,9 @@ const (
 // alignCmd represents the align command
 var alignCmd = &cobra.Command{
 	Use:   "align",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "Continuously fetch data and display timeseries CLI charts",
+	Long: `Continuously fetch data and display timeseries CLI charts.
+Useful for aligning antennas.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		g, err := gotmo.NewGotmo(hostname, reqtimeout, pingtargets, pingWorkerCount)
 		if err != nil {

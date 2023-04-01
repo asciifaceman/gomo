@@ -25,3 +25,4 @@ target/
 
 # Data contents
 data/prometheus/*
+data/grafana/*

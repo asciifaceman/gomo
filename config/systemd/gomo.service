@@ -1,0 +1,11 @@
+[Unit]
+Description="Gomo Trashcan Monitoring"
+Documentation="github.com/asciifaceman/gomo"
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/sbin/gomo daemon
+
+[Install]
+WantedBy=multi-user.target
