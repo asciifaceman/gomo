@@ -83,6 +83,18 @@ to quickly create a Cobra application.`,
 		p5GRSRQKey.TextStyle.Fg = ui.ColorYellow
 		p5GRSRQKey.SetRect(75, 11, 100, 14)
 
+		p5GBand := widgets.NewParagraph()
+		p5GBand.Title = " Band "
+		p5GBand.Text = "NA"
+		p5GBand.TextStyle.Fg = ui.ColorWhite
+		p5GBand.SetRect(75, 14, 100, 17)
+
+		p5GCellID := widgets.NewParagraph()
+		p5GCellID.Title = " Cell ID "
+		p5GCellID.Text = "NA"
+		p5GCellID.TextStyle.Fg = ui.ColorWhite
+		p5GCellID.SetRect(75, 17, 100, 20)
+
 		lcLTE := widgets.NewPlot()
 		lcLTE.Title = " LTE "
 		lcLTE.Data = make([][]float64, 3)
@@ -107,6 +119,18 @@ to quickly create a Cobra application.`,
 		pLTERSRQKey.Text = "RSRQ"
 		pLTERSRQKey.TextStyle.Fg = ui.ColorYellow
 		pLTERSRQKey.SetRect(75, 31, 100, 34)
+
+		pLTEBand := widgets.NewParagraph()
+		pLTEBand.Title = " Band "
+		pLTEBand.Text = "NA"
+		pLTEBand.TextStyle.Fg = ui.ColorWhite
+		pLTEBand.SetRect(75, 34, 100, 37)
+
+		pLTECellID := widgets.NewParagraph()
+		pLTECellID.Title = " Cell ID "
+		pLTECellID.Text = "NA"
+		pLTECellID.TextStyle.Fg = ui.ColorWhite
+		pLTECellID.SetRect(75, 37, 100, 40)
 
 		slice5GSNR := []float64{}
 		highest5GSNR := float64(0)
@@ -161,6 +185,8 @@ to quickly create a Cobra application.`,
 			p5GSNRKey.Text = fmt.Sprintf(" SNR (peak: %f)", highest5GSNR)
 			p5GRSRPKey.Text = fmt.Sprintf(" RSRP (peak: %f)", highest5GRSRP)
 			p5GRSRQKey.Text = fmt.Sprintf(" RSRQ (peak: %f)", highestRSRQ)
+			p5GBand.Text = radioData.Cell5GStats[0].Stat.Band
+			p5GCellID.Text = radioData.Cell5GStats[0].Stat.PhysicalCellID
 
 			// LTE
 
@@ -199,9 +225,10 @@ to quickly create a Cobra application.`,
 			pLTESNRKey.Text = fmt.Sprintf(" SNR (peak: %f)", highestLTESNR)
 			pLTERSRPKey.Text = fmt.Sprintf(" RSRP (peak: %f)", highestLTERSRP)
 			pLTERSRQKey.Text = fmt.Sprintf(" RSRQ (peak: %f)", highestRSRQ)
+			pLTEBand.Text = radioData.CellLTEStats[0].Stat.Band
+			pLTECellID.Text = radioData.CellLTEStats[0].Stat.PhysicalCellID
 
-			ui.Render(p, lc5G, lcLTE, p5GSNRKey, p5GRSRPKey, p5GRSRQKey, pLTESNRKey, pLTERSRPKey, pLTERSRQKey)
-			//ui.Render(p, lc5GSNR, lc5GRSRP, lc5GRSRQ, lcLTESNR)
+			ui.Render(p, lc5G, lcLTE, p5GSNRKey, p5GRSRPKey, p5GRSRQKey, pLTESNRKey, pLTERSRPKey, pLTERSRQKey, p5GBand, p5GCellID, pLTEBand, pLTECellID)
 		}
 
 		uiEvents := ui.PollEvents()

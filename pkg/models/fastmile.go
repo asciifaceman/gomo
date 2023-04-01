@@ -26,7 +26,7 @@ type FastmileReturn struct {
 type FastmileRadioStatus struct {
 	ConnectionStatus []*ConnectionStatus `json:"connection_status"`
 	ApCfg            []*ApnCfg           `json:"apn_cfg"`
-	CellularStats    []*CellularStats    `json:"cellular_status"`
+	CellularStats    []*CellularStats    `json:"cellular_stats"`
 	EthernetStats    []*EthernetStats    `json:"ethernet_stats"`
 	CellCAStats      []*CellCAStats      `json:"cell_CA_stats_cfg"`
 	Cell5GStats      []*Cell5GStats      `json:"cell_5G_stats_cfg"`

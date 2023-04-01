@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"sync"
 	"syscall"
 	"time"
@@ -23,52 +24,113 @@ const (
 	DaemonAddr = ":2112"
 )
 
+/*
+600 MHz: Band 71
+700 MHz: Band 12
+850 MHz: Band 5
+1700/2100 MHz: Bands 4/66
+1900 MHz: Band 2
+*/
+
 var (
-	LabelCellID = "cell_id"
-	LabelBand   = "band"
-	cellLabels  = []string{LabelCellID, LabelBand}
-	SNR5G       = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+	BandMap5G = map[string]float64{
+		"n71":  0.6,
+		"n41":  2.5,
+		"n2":   3.4,
+		"n77":  3.7,
+		"n258": 24,
+		"n261": 39,
+		"n262": 47,
+	}
+	BandMapLTE = map[string]float64{
+		"B71": 0.6,
+		"B12": 0.7,
+		"B5":  0.85,
+		"B4":  1.7,
+		"B66": 2.1,
+		"B2":  1.9,
+	}
+	LabelCellID     = "cell_id"
+	LabelBand       = "band"
+	CurrentCellId5G = prometheus.NewGauge(prometheus.GaugeOpts{
+		Namespace: "gomo",
+		Subsystem: "5g",
+		Name:      "cell_id",
+		Help:      "The current CellID of the 5G radio. GHz",
+	})
+	CurrentBand5G = prometheus.NewGauge(prometheus.GaugeOpts{
+		Namespace: "gomo",
+		Subsystem: "5g",
+		Name:      "band",
+		Help:      "The current Band of the 5G radio. GHz",
+	})
+	SNR5G = prometheus.NewGauge(prometheus.GaugeOpts{
 		Namespace: "gomo",
 		Subsystem: "5g",
 		Name:      "snr",
 		Help:      "The current SNR of the 5G radio at this point in time. dB",
-	}, cellLabels)
-	RSRP5G = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+	})
+	RSRP5G = prometheus.NewGauge(prometheus.GaugeOpts{
 		Namespace: "gomo",
 		Subsystem: "5g",
 		Name:      "rsrp",
 		Help:      "The current RSRP of the 5G radio at this point in time. dBm",
-	}, cellLabels)
-	RSRQ5G = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+	})
+	RSRQ5G = prometheus.NewGauge(prometheus.GaugeOpts{
 		Namespace: "gomo",
 		Subsystem: "5g",
 		Name:      "rsrq",
 		Help:      "The current RSRQ of the 5G radio at this point in time. dBm",
-	}, cellLabels)
-	RSSILTE = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+	})
+	CurrentCellIdLTE = prometheus.NewGauge(prometheus.GaugeOpts{
+		Namespace: "gomo",
+		Subsystem: "lte",
+		Name:      "cell_id",
+		Help:      "The current CellID of the LTE radio. GHz",
+	})
+	CurrentBandLTE = prometheus.NewGauge(prometheus.GaugeOpts{
+		Namespace: "gomo",
+		Subsystem: "lte",
+		Name:      "band",
+		Help:      "The current Band of the LTE radio. GHz",
+	})
+	RSSILTE = prometheus.NewGauge(prometheus.GaugeOpts{
 		Namespace: "gomo",
 		Subsystem: "lte",
 		Name:      "rssi",
 		Help:      "The current RSSI of the LTE radio at this point in time. dBm",
-	}, cellLabels)
-	SNRLTE = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+	})
+	SNRLTE = prometheus.NewGauge(prometheus.GaugeOpts{
 		Namespace: "gomo",
 		Subsystem: "lte",
 		Name:      "snr",
 		Help:      "The current SNR of the LTE radio at this point in time. dB",
-	}, cellLabels)
-	RSRPLTE = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+	})
+	RSRPLTE = prometheus.NewGauge(prometheus.GaugeOpts{
 		Namespace: "gomo",
 		Subsystem: "lte",
 		Name:      "rsrp",
 		Help:      "The current RSRP of the LTE radio at this point in time. dBm",
-	}, cellLabels)
-	RSRQLTE = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+	})
+	RSRQLTE = prometheus.NewGauge(prometheus.GaugeOpts{
 		Namespace: "gomo",
 		Subsystem: "lte",
 		Name:      "rsrq",
 		Help:      "The current RSRQ of the LTE radio at this point in time. dB",
-	}, cellLabels)
+	})
+
+	CellBytesSent = prometheus.NewGauge(prometheus.GaugeOpts{
+		Namespace: "gomo",
+		Subsystem: "cell",
+		Name:      "bytes_sent",
+		Help:      "The number of bytes sent this uptime",
+	})
+	CellBytesRecv = prometheus.NewGauge(prometheus.GaugeOpts{
+		Namespace: "gomo",
+		Subsystem: "cell",
+		Name:      "bytes_received",
+		Help:      "The number of bytes received this uptime",
+	})
 )
 
 // Gotmo is the primary entrypoint for interactive operation
@@ -129,6 +191,13 @@ func (g *Gotmo) RegisterPrometheus() {
 	prometheus.MustRegister(SNRLTE)
 	prometheus.MustRegister(RSRPLTE)
 	prometheus.MustRegister(RSRQLTE)
+	prometheus.MustRegister(CellBytesSent)
+	prometheus.MustRegister(CellBytesRecv)
+	prometheus.MustRegister(CurrentBand5G)
+	prometheus.MustRegister(CurrentCellId5G)
+	prometheus.MustRegister(CurrentBandLTE)
+	prometheus.MustRegister(CurrentCellIdLTE)
+
 }
 
 // Daemon runs Gomo as a server continuously gathering metrics for prometheus
@@ -167,35 +236,29 @@ func (g *Gotmo) Daemon() error {
 			wg.Add(1)
 		case ret := <-g.FastmileReturnChannel:
 			g.Logger.Info("received fastmile data")
-			SNR5G.With(prometheus.Labels{
-				LabelCellID: ret.Body.Cell5GStats[0].Stat.PhysicalCellID,
-				LabelBand:   ret.Body.Cell5GStats[0].Stat.Band,
-			}).Set(float64(ret.Body.Cell5GStats[0].Stat.SNRCurrent))
-			RSRP5G.With(prometheus.Labels{
-				LabelCellID: ret.Body.Cell5GStats[0].Stat.PhysicalCellID,
-				LabelBand:   ret.Body.Cell5GStats[0].Stat.Band,
-			}).Set(float64(ret.Body.Cell5GStats[0].Stat.RSRPCurrent))
-			RSRQ5G.With(prometheus.Labels{
-				LabelCellID: ret.Body.Cell5GStats[0].Stat.PhysicalCellID,
-				LabelBand:   ret.Body.Cell5GStats[0].Stat.Band,
-			}).Set(float64(ret.Body.Cell5GStats[0].Stat.RSRQCurrent))
+			SNR5G.Set(float64(ret.Body.Cell5GStats[0].Stat.SNRCurrent))
+			RSRP5G.Set(float64(ret.Body.Cell5GStats[0].Stat.RSRPCurrent))
+			RSRQ5G.Set(float64(ret.Body.Cell5GStats[0].Stat.RSRQCurrent))
+			cur5GCellID, err := strconv.ParseFloat(ret.Body.Cell5GStats[0].Stat.PhysicalCellID, 64)
+			if err != nil {
+				cur5GCellID = 0
+			}
+			CurrentCellId5G.Set(cur5GCellID)
+			CurrentBand5G.Set(BandMap5G[ret.Body.Cell5GStats[0].Stat.Band])
 
-			RSSILTE.With(prometheus.Labels{
-				LabelCellID: ret.Body.Cell5GStats[0].Stat.PhysicalCellID,
-				LabelBand:   ret.Body.Cell5GStats[0].Stat.Band,
-			}).Set(float64(ret.Body.CellLTEStats[0].Stat.RSSICurrent))
-			SNRLTE.With(prometheus.Labels{
-				LabelCellID: ret.Body.Cell5GStats[0].Stat.PhysicalCellID,
-				LabelBand:   ret.Body.Cell5GStats[0].Stat.Band,
-			}).Set(float64(ret.Body.CellLTEStats[0].Stat.SNRCurrent))
-			RSRPLTE.With(prometheus.Labels{
-				LabelCellID: ret.Body.Cell5GStats[0].Stat.PhysicalCellID,
-				LabelBand:   ret.Body.Cell5GStats[0].Stat.Band,
-			}).Set(float64(ret.Body.CellLTEStats[0].Stat.RSRPCurrent))
-			RSRQLTE.With(prometheus.Labels{
-				LabelCellID: ret.Body.Cell5GStats[0].Stat.PhysicalCellID,
-				LabelBand:   ret.Body.Cell5GStats[0].Stat.Band,
-			}).Set(float64(ret.Body.CellLTEStats[0].Stat.RSRQCurrent))
+			RSSILTE.Set(float64(ret.Body.CellLTEStats[0].Stat.RSSICurrent))
+			SNRLTE.Set(float64(ret.Body.CellLTEStats[0].Stat.SNRCurrent))
+			RSRPLTE.Set(float64(ret.Body.CellLTEStats[0].Stat.RSRPCurrent))
+			RSRQLTE.Set(float64(ret.Body.CellLTEStats[0].Stat.RSRQCurrent))
+			curLTECellID, err := strconv.ParseFloat(ret.Body.CellLTEStats[0].Stat.PhysicalCellID, 64)
+			if err != nil {
+				curLTECellID = 0
+			}
+			CurrentCellIdLTE.Set(curLTECellID)
+			CurrentBandLTE.Set(BandMapLTE[ret.Body.CellLTEStats[0].Stat.Band])
+
+			CellBytesSent.Set(float64(ret.Body.CellularStats[0].BytesSent))
+			CellBytesRecv.Set(float64(ret.Body.CellularStats[0].BytesReceived))
 		}
 	}
 

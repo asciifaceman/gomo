@@ -1,7 +1,12 @@
 # GoMo
 Tmobile trashcan datalogging for the original trashcan
 
-# Usage 
+# Usage
+
+### Quick Run
+The quick run mode is accessible via the `show` command, and does a single pass and returns current values along with the results of a ping test.
+
+
 ```
 Fetch and log trashcan data to a long term data store for analyzing
 
@@ -43,6 +48,14 @@ IP6: redacted
   Band:   n41
   CellID: redacted
 ```
+
+### Alignment
+Alignment mode, accessible via `align` shows a continuous time series graph of LTE and 5G metrics to help align an antenna.
+
+![Alignment](static/alignment.png)
+
+### Daemon datalogging
+Daemon mode, accessible via `daemon` is a background process - meant to be run by a systemd unit. This continuously scrapes data from the trashcan and surfaces it on a /metrics endpoint for prometheus to scrape.
 
 # TODO
 * Hook up to time series datasource

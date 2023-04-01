@@ -1,5 +1,11 @@
 version: "3.3"
 services:
+#  speedtest_exporter:
+#    image: "ghcr.io/danopstech/speedtest_exporter:latest"
+#    restart: always
+#    ports:
+#      - "9092:9090"
+
   prometheus:
     image: "ghcr.io/danopstech/prometheus:latest"
     restart: always
@@ -13,3 +19,22 @@ services:
       - type: bind
         source: ./data/prometheus
         target: /prometheus
+    extra_hosts:
+    - "host.docker.internal:host-gateway"
+
+  grafana:
+    image: "ghcr.io/danopstech/grafana:latest"
+    restart: always
+    user: "root"
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_INSTALL_PLUGINS=ae3e-plotly-panel
+      - GF_LOG_CONSOLE_LEVEL=warn
+    volumes:
+      - type: bind
+        source: ./data/grafana
+        target: /var/lib/grafana
+      - type: bind
+        source: ./config/grafana/provisioning
+        target: /etc/grafana/provisioning/
