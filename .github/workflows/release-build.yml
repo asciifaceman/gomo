@@ -9,6 +9,9 @@ on:
       - "v*.*.*"
 
 jobs:
+  test:
+    - name: Run tests
+      run: go test -v ./...
 
   build:
     env:
@@ -27,31 +30,25 @@ jobs:
       id: date
       run: echo "::set-output name=date::$(date)"
 
-    - name: Test
-      run: go test -v ./...
-
     - name: Build linux@amd64
-      run: go build -ldflags "-X github.com/asciifaceman/gomo/cmd.version=$GITHUB_REF_NAME -X github.com/asciifaceman/gomo/cmd.build=${{ steps.date.outputs.date }}" -o target/gomo ./...
-#      run: go build -v ./...
+      run: go build -ldflags "-X github.com/asciifaceman/gomo/cmd.version=$GITHUB_REF_NAME -X 'github.com/asciifaceman/gomo/cmd.build=${{ steps.date.outputs.date }}'" ./...
     - name: Install zip
       uses: montudor/action-zip@v1
       with:
-        args: zip gomo-amd64.zip target/gomo
+        args: zip gomo-amd64.zip gomo
     
     - name: Clean up amd64
-      run: rm -rf target/
-
+      run: rm -rf gomo
 
     - name: Change GOARCH variable
       run: echo "::set-env name=GOARCH::arm64"
 
     - name: Build linux@arm64
-      run: go build -ldflags "-X github.com/asciifaceman/gomo/cmd.version=$GITHUB_REF_NAME -X github.com/asciifaceman/gomo/cmd.build=${{ steps.date.outputs.date }}" -o target/gomo ./...
-#      run: go build -v ./...
+      run: go build -ldflags "-X github.com/asciifaceman/gomo/cmd.version=$GITHUB_REF_NAME -X 'github.com/asciifaceman/gomo/cmd.build=${{ steps.date.outputs.date }}'" ./...
     - name: Install zip
       uses: montudor/action-zip@v1
       with:
-        args: zip gomo-arm64.zip target/gomo
+        args: zip gomo-arm64.zip gomo
 
     - name: Release
       uses: softprops/action-gh-release@v1
