@@ -226,7 +226,7 @@ func (g *Gotmo) Daemon() error {
 			close(g.HttpErrorChannel)
 			ret := fmt.Errorf("received exit signal")
 			for err := range g.HttpErrorChannel {
-				ret = fmt.Errorf("%w; %w", ret, err)
+				ret = fmt.Errorf("%s; %s", ret.Error(), err.Error())
 			}
 			return ret
 		case <-time.After(15 * time.Second):
