@@ -1,0 +1,64 @@
+# This workflow will build a golang project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
+
+name: Go
+
+on:  
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+
+  build:
+    env:
+      GOOS: 'linux'
+      GOARCH: 'amd64' # Wonder if I can matrix this with arm64 as well
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: 1.19
+        
+    - name: Get current date
+      id: date
+      run: echo "::set-output name=date::$(date)"
+
+    - name: Test
+      run: go test -v ./...
+
+    - name: Build linux@amd64
+      run: go build -ldflags "-X github.com/asciifaceman/gomo/cmd.version=$GITHUB_REF_NAME -X github.com/asciifaceman/gomo/cmd.build=${{ steps.date.outputs.date }}" -o target/gomo ./...
+#      run: go build -v ./...
+    - name: Install zip
+      uses: montudor/action-zip@v1
+      with:
+        args: zip gomo-amd64.zip target/gomo
+    
+    - name: Clean up amd64
+      run: rm -rf target/
+
+
+    - name: Change GOARCH variable
+      run: echo "::set-env name=GOARCH::arm64"
+
+    - name: Build linux@arm64
+      run: go build -ldflags "-X github.com/asciifaceman/gomo/cmd.version=$GITHUB_REF_NAME -X github.com/asciifaceman/gomo/cmd.build=${{ steps.date.outputs.date }}" -o target/gomo ./...
+#      run: go build -v ./...
+    - name: Install zip
+      uses: montudor/action-zip@v1
+      with:
+        args: zip gomo-arm64.zip target/gomo
+
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      #if: startsWith(github.ref, 'refs/tags/')
+      with:
+        tag_name: $GITHUB_REF_NAME
+        files: |
+          gomo-amd64.zip
+          gomo-arm64.zip
+
