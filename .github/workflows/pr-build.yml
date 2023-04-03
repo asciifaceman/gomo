@@ -1,0 +1,71 @@
+# This workflow will build a golang project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
+
+name: Go-pr-test
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - README.md
+      - .gitignore
+      - .github/**
+      - LICENSE
+      - Makefile
+      - Dockerfile
+      - docker-compose.yml
+      - static/**
+      - config/**
+      - data/**
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: 1.19
+
+    - name: Run tests
+      run: go test -cov -v ./...
+
+  build:
+    runs-on: ubuntu-latest
+      
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: 1.19
+        
+    - name: Get current date
+      id: date
+      run: |
+        echo "date=$(date)" >> $GITHUB_ENV
+
+    - name: Build linux@amd64
+      run: go build -ldflags "-X github.com/asciifaceman/gomo/cmd.version=${{  github.ref_name }} -X 'github.com/asciifaceman/gomo/cmd.build=${{ env.date }}'"
+      env:
+        GOOS: 'linux'
+        GOARCH: 'amd64' # Wonder if I can matrix this with arm64 as well
+    
+    - name: Clean up amd64
+      run: rm -rf gomo
+
+    - name: Build linux@arm64
+      run: go build -ldflags "-X github.com/asciifaceman/gomo/cmd.version=${{  github.ref_name }} -X 'github.com/asciifaceman/gomo/cmd.build=${{ env.date }}'"
+      env:
+        GOOS: 'linux'
+        GOARCH: 'amd64' # Wonder if I can matrix this with arm64 as well
+
+      
+
