@@ -40,9 +40,9 @@ jobs:
       run: echo "::set-output name=date::$(date)"
 
     - name: Build linux@amd64
-      run: go build -ldflags "-X github.com/asciifaceman/gomo/cmd.version=$GITHUB_REF_NAME -X 'github.com/asciifaceman/gomo/cmd.build=${{ steps.date.outputs.date }}'" ./...
-    - name: Zip build
-      run: zip gomo-amd64.zip gomo
+      run: go build -ldflags "-X github.com/asciifaceman/gomo/cmd.version=$GITHUB_REF_NAME -X 'github.com/asciifaceman/gomo/cmd.build=${{ steps.date.outputs.date }}'"
+    - name: tar build
+      run: tar cvfz gomo-amd64.tar.gz gomo
     
     - name: Clean up amd64
       run: rm -rf gomo
@@ -51,9 +51,9 @@ jobs:
       run: echo "::set-env name=GOARCH::arm64"
 
     - name: Build linux@arm64
-      run: go build -ldflags "-X github.com/asciifaceman/gomo/cmd.version=$GITHUB_REF_NAME -X 'github.com/asciifaceman/gomo/cmd.build=${{ steps.date.outputs.date }}'" ./...
-    - name: Zip build
-      run: zip gomo-arm64.zip gomo
+      run: go build -ldflags "-X github.com/asciifaceman/gomo/cmd.version=$GITHUB_REF_NAME -X 'github.com/asciifaceman/gomo/cmd.build=${{ steps.date.outputs.date }}'"
+    - name: tar build
+      run: tar cvfz gomo-arm64.tar.gz gomo
 
     - name: Release
       uses: softprops/action-gh-release@v1
