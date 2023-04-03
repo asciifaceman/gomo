@@ -1,6 +1,6 @@
 .PHONY: clean test build build-linux
 
-VERSION=`cat VERSION`
+VERSION=`git rev-parse --short HEAD`
 PACKAGE:=github.com/asciifaceman/gomo
 
 clean: ## clean build dir
