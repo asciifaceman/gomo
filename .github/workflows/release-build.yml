@@ -23,9 +23,6 @@ jobs:
       run: go test -v ./...
 
   build:
-    env:
-      GOOS: 'linux'
-      GOARCH: 'amd64' # Wonder if I can matrix this with arm64 as well
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
@@ -37,21 +34,28 @@ jobs:
         
     - name: Get current date
       id: date
-      run: echo "::set-output name=date::$(date)"
+      run: |
+        echo "date=$(date)" >> $GITHUB_ENV
+      #run: echo "::set-output name=date::$(date)"
 
     - name: Build linux@amd64
-      run: go build -ldflags "-X github.com/asciifaceman/gomo/cmd.version=$GITHUB_REF_NAME -X 'github.com/asciifaceman/gomo/cmd.build=${{ steps.date.outputs.date }}'"
+      run: go build -ldflags "-X github.com/asciifaceman/gomo/cmd.version=$GITHUB_REF_NAME -X 'github.com/asciifaceman/gomo/cmd.build=${{ env.date }}'"
+      env:
+        GOOS: 'linux'
+        GOARCH: 'amd64' # Wonder if I can matrix this with arm64 as well
+    
     - name: tar build
       run: tar cvfz gomo-amd64.tar.gz gomo
     
     - name: Clean up amd64
       run: rm -rf gomo
 
-    - name: Change GOARCH variable
-      run: echo "::set-env name=GOARCH::arm64"
-
     - name: Build linux@arm64
-      run: go build -ldflags "-X github.com/asciifaceman/gomo/cmd.version=$GITHUB_REF_NAME -X 'github.com/asciifaceman/gomo/cmd.build=${{ steps.date.outputs.date }}'"
+      run: go build -ldflags "-X github.com/asciifaceman/gomo/cmd.version=$GITHUB_REF_NAME -X 'github.com/asciifaceman/gomo/cmd.build=${{ env.date }}'"
+      env:
+        GOOS: 'linux'
+        GOARCH: 'amd64' # Wonder if I can matrix this with arm64 as well
+
     - name: tar build
       run: tar cvfz gomo-arm64.tar.gz gomo
 
