@@ -265,17 +265,6 @@ func (g *Gotmo) Daemon() error {
 	return nil
 }
 
-/*
-	g.StopHTTPServer()
-	close(g.HttpErrorChannel)
-	var finalErr error
-	for err := range g.HttpErrorChannel {
-		fmt.Println(err)
-		finalErr = err
-	}
-	return finalErr
-*/
-
 // RunHTTPServer launches the metrics http endpoint
 func (g *Gotmo) RunHTTPServer() {
 	if err := g.Server.ListenAndServe(); err != nil {

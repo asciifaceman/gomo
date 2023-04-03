@@ -82,13 +82,19 @@ There is a rough prometheus/grafana setup configured with a dashboard meant for 
 ![Grafana](static/grafana_dash.png)
 
 # TODO
+## High Priority
+* Export more trashcan metrics to prometheus
+* Stub trashcan for tests with a fake json response
+* Improve daemon exit
+
+## Low Priority
 * Lots of cleaning up and making code more coherent after rapid dev
 * Tighten up prometheus/grafana deployment
 * Docker container for gomo in docker-compose for quick launch
 * Configurable port for gomo metrics
 * Add internet speedtest metrics exporter
 * Add ping metrics exporter
-* Export more trashcan metrics to prometheus
+
 
 # Dependencies
 * spf13/cobra
