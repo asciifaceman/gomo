@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	defaultTimeout = 15 * time.Second
+	DefaultTimeout = 15 * time.Second
 
 	HeaderUserAgent      = "Mozilla/5.0 (Windows NT 10.0; rv:111.0) Gecko/20100101 Firefox/111.0"
 	HeaderAccept         = "application/json"
@@ -34,7 +34,7 @@ type Trashcan struct {
 // NewTrashcan returns a configured Trashcan client
 func NewTrashcan(hostname string, timeout time.Duration) (*Trashcan, error) {
 	if timeout == 0 {
-		timeout = defaultTimeout
+		timeout = DefaultTimeout
 	}
 
 	_, err := url.Parse(hostname)
@@ -52,7 +52,7 @@ func NewTrashcan(hostname string, timeout time.Duration) (*Trashcan, error) {
 	return t, nil
 }
 
-// FetchRadioStatusAsync is for running in a goroutine
+// FetchRadioStatusAsync is for running in a goroutine, calls FetchRadioStatus
 func (t *Trashcan) FetchRadioStatusAsync(wg *sync.WaitGroup, ret chan *models.FastmileReturn) {
 	defer wg.Done()
 	response := &models.FastmileReturn{}

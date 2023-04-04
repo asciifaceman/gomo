@@ -1,26 +1,64 @@
 package models
 
-import "github.com/asciifaceman/gomo/pkg/helpers"
+import (
+	"strconv"
+
+	"github.com/asciifaceman/gomo/pkg/helpers"
+	"github.com/asciifaceman/gomo/pkg/radiofreq"
+)
 
 /*
 	RSRP dBm
 	SNR dB
 	RSRQ dB
 	RSSI dBm
+
+	Trashcan 1.2201.00.0328
 */
 
 const (
-	SNR_LOWER_BOUND  = -20
-	SNR_UPPER_BOUND  = 20
-	RSRP_LOWER_BOUND = -115
-	RSRP_UPPER_BOUND = -80
-	RSRQ_LOWER_BOUND = -20
-	RSRQ_UPPER_BOUND = -10
+	SNR_UNIT                 = "dB"
+	RSRQ_UNIT                = "dB"
+	RSRP_UNIT                = "dBm"
+	RSSI_UNIT                = "dBm"
+	SNR_LOWER_BOUND  float64 = -20
+	SNR_UPPER_BOUND  float64 = 20
+	RSRP_LOWER_BOUND float64 = -115
+	RSRP_UPPER_BOUND float64 = -80
+	RSRQ_LOWER_BOUND float64 = -20
+	RSRQ_UPPER_BOUND float64 = -10
 )
 
 type FastmileReturn struct {
 	Error error
 	Body  *FastmileRadioStatus
+}
+
+// StatLTE returns the attached LTE stats
+func (f *FastmileReturn) StatLTE() *CellLTEStat {
+	return f.Body.CellLTEStats[0].Stat
+}
+
+// Stat5G returns the attached 5G stats
+func (f *FastmileReturn) Stat5G() *Cell5GStat {
+	return f.Body.Cell5GStats[0].Stat
+}
+
+// StatCellular returns the attached Cellular stats
+func (f *FastmileReturn) StatCellular() *CellularStats {
+	return f.Body.CellularStats[0]
+}
+
+func (f *FastmileReturn) Status() float64 {
+	return float64(f.Body.ConnectionStatus[0].ConnectionStatus)
+}
+
+func (f *FastmileReturn) BytesSent() float64 {
+	return float64(f.Body.CellularStats[0].BytesSent)
+}
+
+func (f *FastmileReturn) BytesRecv() float64 {
+	return float64(f.Body.CellularStats[0].BytesReceived)
 }
 
 type FastmileRadioStatus struct {
@@ -86,14 +124,26 @@ type Cell5GStats struct {
 }
 
 type Cell5GStat struct {
-	SNRCurrent               int    `json:"SNRCurrent"`
-	RSRPCurrent              int    `json:"RSRPCurrent"`
-	RSRPStrengthIndexCurrent int    `json:"RSRPStrengthIndexCurrent"`
-	PhysicalCellID           string `json:"PhysicalCellID"`
-	RSRQCurrent              int    `json:"RSRQCurrent"`
-	DownlinkNRARFCN          int    `json:"Downlink_NR_ARFCN"`
-	SignalStrengthLevel      int    `json:"SignalStrengthLevel"`
-	Band                     string `json:"Band"`
+	SNRCurrent               float64 `json:"SNRCurrent"`
+	RSRPCurrent              float64 `json:"RSRPCurrent"`
+	RSRPStrengthIndexCurrent float64 `json:"RSRPStrengthIndexCurrent"`
+	PhysicalCellID           string  `json:"PhysicalCellID"`
+	RSRQCurrent              float64 `json:"RSRQCurrent"`
+	DownlinkNRARFCN          float64 `json:"Downlink_NR_ARFCN"`
+	SignalStrengthLevel      float64 `json:"SignalStrengthLevel"`
+	Band                     string  `json:"Band"`
+}
+
+func (c *Cell5GStat) Band64() float64 {
+	return radiofreq.BandMap.FrequencyFromShortname(c.Band)
+}
+
+func (c *Cell5GStat) ID() float64 {
+	id, err := strconv.ParseFloat(c.PhysicalCellID, 64)
+	if err != nil {
+		id = 0
+	}
+	return id
 }
 
 func (c *Cell5GStat) SNRQuality(min float64, max float64) float64 {
@@ -103,7 +153,7 @@ func (c *Cell5GStat) SNRQuality(min float64, max float64) float64 {
 	if c.SNRCurrent > SNR_UPPER_BOUND {
 		return max
 	}
-	return helpers.NumMap(float64(c.SNRCurrent), float64(SNR_LOWER_BOUND), float64(SNR_UPPER_BOUND), float64(min), float64(max))
+	return helpers.NumReMap(c.SNRCurrent, SNR_LOWER_BOUND, SNR_UPPER_BOUND, min, max)
 
 }
 
@@ -114,7 +164,7 @@ func (c *Cell5GStat) RSRPQuality(min float64, max float64) float64 {
 	if c.RSRPCurrent > RSRP_UPPER_BOUND {
 		return max
 	}
-	return helpers.NumMap(float64(c.RSRPCurrent), float64(RSRP_LOWER_BOUND), float64(RSRP_UPPER_BOUND), float64(min), float64(max))
+	return helpers.NumReMap(c.RSRPCurrent, RSRP_LOWER_BOUND, RSRP_UPPER_BOUND, min, max)
 }
 
 func (c *Cell5GStat) RSRQQuality(min float64, max float64) float64 {
@@ -124,7 +174,7 @@ func (c *Cell5GStat) RSRQQuality(min float64, max float64) float64 {
 	if c.RSRQCurrent > RSRQ_UPPER_BOUND {
 		return max
 	}
-	return helpers.NumMap(float64(c.RSRQCurrent), float64(RSRQ_LOWER_BOUND), float64(RSRQ_UPPER_BOUND), min, max)
+	return helpers.NumReMap(c.RSRQCurrent, RSRQ_LOWER_BOUND, RSRQ_UPPER_BOUND, min, max)
 }
 
 type CellLTEStats struct {
@@ -132,15 +182,27 @@ type CellLTEStats struct {
 }
 
 type CellLTEStat struct {
-	RSSICurrent              int    `json:"RSSICurrent"`
-	SNRCurrent               int    `json:"SNRCurrent"`
-	RSRPCurrent              int    `json:"RSRPCurrent"`
-	RSRPStrengthIndexCurrent int    `json:"RSRPStrengthIndexCurrent"`
-	PhysicalCellID           string `json:"PhysicalCellID"`
-	RSRQCurrent              int    `json:"RSRQCurrent"`
-	DownlinkEarfcn           int    `json:"DownlinkEarfcn"`
-	SignalStrengthLevel      int    `json:"SignalStrengthLevel"`
-	Band                     string `json:"Band"`
+	RSSICurrent              float64 `json:"RSSICurrent"`
+	SNRCurrent               float64 `json:"SNRCurrent"`
+	RSRPCurrent              float64 `json:"RSRPCurrent"`
+	RSRPStrengthIndexCurrent float64 `json:"RSRPStrengthIndexCurrent"`
+	PhysicalCellID           string  `json:"PhysicalCellID"`
+	RSRQCurrent              float64 `json:"RSRQCurrent"`
+	DownlinkEarfcn           float64 `json:"DownlinkEarfcn"`
+	SignalStrengthLevel      float64 `json:"SignalStrengthLevel"`
+	Band                     string  `json:"Band"`
+}
+
+func (c *CellLTEStat) Band64() float64 {
+	return radiofreq.BandMap.FrequencyFromShortname(c.Band)
+}
+
+func (c *CellLTEStat) ID() float64 {
+	id, err := strconv.ParseFloat(c.PhysicalCellID, 64)
+	if err != nil {
+		id = 0
+	}
+	return id
 }
 
 func (c *CellLTEStat) SNRQuality(min float64, max float64) float64 {
@@ -150,7 +212,7 @@ func (c *CellLTEStat) SNRQuality(min float64, max float64) float64 {
 	if c.SNRCurrent > SNR_UPPER_BOUND {
 		return max
 	}
-	return helpers.NumMap(float64(c.SNRCurrent), float64(SNR_LOWER_BOUND), float64(SNR_UPPER_BOUND), float64(min), float64(max))
+	return helpers.NumReMap(c.SNRCurrent, SNR_LOWER_BOUND, SNR_UPPER_BOUND, min, max)
 
 }
 
@@ -161,7 +223,7 @@ func (c *CellLTEStat) RSRPQuality(min float64, max float64) float64 {
 	if c.RSRPCurrent > RSRP_UPPER_BOUND {
 		return max
 	}
-	return helpers.NumMap(float64(c.RSRPCurrent), float64(RSRP_LOWER_BOUND), float64(RSRP_UPPER_BOUND), float64(min), float64(max))
+	return helpers.NumReMap(c.RSRPCurrent, RSRP_LOWER_BOUND, RSRP_UPPER_BOUND, min, max)
 }
 
 func (c *CellLTEStat) RSRQQuality(min float64, max float64) float64 {
@@ -171,5 +233,5 @@ func (c *CellLTEStat) RSRQQuality(min float64, max float64) float64 {
 	if c.RSRQCurrent > RSRQ_UPPER_BOUND {
 		return max
 	}
-	return helpers.NumMap(float64(c.RSRQCurrent), float64(RSRQ_LOWER_BOUND), float64(RSRQ_UPPER_BOUND), min, max)
+	return helpers.NumReMap(c.RSRQCurrent, RSRQ_LOWER_BOUND, RSRQ_UPPER_BOUND, min, max)
 }
