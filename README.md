@@ -145,6 +145,7 @@ Global Flags:
 # TODO
 ## High Priority
 * Stub trashcan for tests with a fake json response
+* Write tests
 
 ## Low Priority
 * Tighten up prometheus/grafana deployment
