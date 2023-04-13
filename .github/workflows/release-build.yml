@@ -53,7 +53,7 @@ jobs:
         run: echo "build_datetime=$(date --iso-8601=s)" >> $GITHUB_OUTPUT
       - name: Check current date
         id: date-check
-        run: echo "The current date/time is ${{ steps.date.outputs.date }}"
+        run: echo "The current date/time is ${{ steps.date.outputs.build_datetime }}"
       # - uses: wangyoucao577/go-release-action@v1.37
       #   with:
       #     github_token: ${{ secrets.GITHUB_TOKEN }}
