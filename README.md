@@ -55,37 +55,32 @@ Global Flags:
 ```
 
 ```
-=== GOMO 0.0.3 =================================================
-=== LTE ========================================================
-  RSSI:                       -69
-  SNR:                         -1
-  RSRP:                      -106
-  RSRQ:                       -18
-  Band:                       B66
-  CellID:                     redacted
-=== 5G =========================================================
-  SNR:                         -2
-  RSRP:                      -111
-  RSRQ:                       -18
-  Band:                       n41
-  CellID:                      redacted
-=== Ping Tests =================================================
-=== www.google.com =============================================
-  Packets Sent:                 5
-  Packet Loss:                  0
-  Avg. Response Time:  98.89631ms
-=== github.com =================================================
-  Packets Sent:                 5
-  Packet Loss:                  0
-  Avg. Response Time:104.296611ms
-=== 5G =========================================================
-  SNR Quality:               0.45
-  RSRP Quality:0.11428571428571428
-  RSRQ Quality:               0.2
-=== LTE ========================================================
-  SNR Quality:              0.475
-  RSRP Quality:0.2571428571428571
-  RSRQ Quality:               0.2
+=== Gomo 433a10b =======================
+Online: 1
+IPV6: redacted
+Bytes Recv: 39627435316 (39.63GB)
+Bytes Sent: 8446933064 (8.45GB)
+=== 5G =================================
+  Band:                n41
+  CellID:              redacted
+
+  SNR:                   6
+  RSRP:               -102
+  RSRQ:                -12
+=== LTE ================================
+  Band:                B66
+  CellID:              redacted
+
+  SNR:                   1
+  RSRP:               -104
+  RSRQ:                -16
+  RSSI:                -69
+=== Ethernet ===========================
+  Enabled:               1
+  Status:               Up
+
+  Bytes Recv:4293117872 (4.29GB)
+  Bytes Sent:4293117872 (4.29GB)
 ```
 
 ## Alignment
