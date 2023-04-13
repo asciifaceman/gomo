@@ -63,5 +63,4 @@ jobs:
           sha256sum: true
           # TODO: go all in on Makefile?
           # build_command: make
-          ldflags: -X github.com/asciifaceman/gomo/cmd.version=${{  github.ref_name }} -X github.com/asciifaceman/gomo/cmd.build=${{ env.date }}
-          #ldflags: -X main.commit=${{ github.sha }} -X main.version=${{ github.ref }}
+          ldflags: -X github.com/asciifaceman/gomo/cmd.version='${{  github.ref_name }}'' -X github.com/asciifaceman/gomo/cmd.build='${{ env.date }}'
