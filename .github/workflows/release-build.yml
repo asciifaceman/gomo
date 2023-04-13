@@ -64,4 +64,4 @@ jobs:
           # TODO: go all in on Makefile?
           # build_command: make
           #ldflags: -X github.com/asciifaceman/gomo/cmd.version=${{  github.ref_name }} -X github.com/asciifaceman/gomo/cmd.build=${{ env.date }}
-           ldflags: -X github.com/asciifaceman/gomo/cmd.version=test -X github.com/asciifaceman/gomo/cmd.build=someDate
+          ldflags: -X github.com/asciifaceman/gomo/cmd.version=test -X github.com/asciifaceman/gomo/cmd.build=someDate
