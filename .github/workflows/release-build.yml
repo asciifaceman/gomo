@@ -47,11 +47,10 @@ jobs:
             goos: darwin
     steps:
       - uses: actions/checkout@v3
+
       - name: Get current date
         id: date
-        run: |
-          echo "date=$(date)" >> $GITHUB_ENV
-        #run: echo "::set-output name=date::$(date)"
+        run: echo "::set-output name=date::$(date date --iso-8601=s)"
       - uses: wangyoucao577/go-release-action@v1.37
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -63,5 +62,7 @@ jobs:
           sha256sum: true
           # TODO: go all in on Makefile?
           # build_command: make
+          ldflags: -X github.com/asciifaceman/gomo/cmd.build=${{ steps.date.outputs.date }}
           #ldflags: -X github.com/asciifaceman/gomo/cmd.version=${{  github.ref_name }} -X github.com/asciifaceman/gomo/cmd.build=${{ env.date }}
-          ldflags: -X github.com/asciifaceman/gomo/cmd.version=test -X github.com/asciifaceman/gomo/cmd.build=someDate
+          ## Works:
+          #ldflags: -X github.com/asciifaceman/gomo/cmd.version=test -X github.com/asciifaceman/gomo/cmd.build=someDate
