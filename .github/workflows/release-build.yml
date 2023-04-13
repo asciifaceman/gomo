@@ -52,7 +52,7 @@ jobs:
         id: date
         run: echo "::set-output name=date::$(date date --iso-8601=s)"
       - name: Get current date
-        id: date
+        id: date-check
         run: echo "The current date/time is ${{ steps.date.outputs.date }}"
       # - uses: wangyoucao577/go-release-action@v1.37
       #   with:
