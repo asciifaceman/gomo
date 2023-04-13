@@ -65,7 +65,7 @@ jobs:
           sha256sum: true
           # TODO: go all in on Makefile?
           # build_command: make
+          ##
+          # Note: The go-release-action wraps all input here in double quotes. Any dynamic input is therefore sensitive to additional quotes/escape sequences added
+          #   to the value of the ${{var}} at the time var was created.
           ldflags: -X github.com/asciifaceman/gomo/cmd.build=${{ steps.date.outputs.build_datetime }} -X github.com/asciifaceman/gomo/cmd.version=${{  github.ref_name }}
-          #ldflags: -X github.com/asciifaceman/gomo/cmd.version=${{  github.ref_name }} -X github.com/asciifaceman/gomo/cmd.build=${{ env.date }}
-          ## Works:
-          #ldflags: -X github.com/asciifaceman/gomo/cmd.version=test -X github.com/asciifaceman/gomo/cmd.build=someDate
