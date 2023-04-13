@@ -36,6 +36,25 @@ Use "gomo [command] --help" for more information about a command.
 The quick run mode is accessible via the `show` command, and does a single pass and returns current values along with the results of a ping test.
 
 ```
+$ gomo show --help
+Do a single fetch and display.
+
+Usage:
+  gomo show [flags]
+
+Flags:
+  -h, --help     help for show
+      --pretty   Print a prettified table layout instead of raw data
+
+Global Flags:
+      --config string     config file (default is $HOME/.gomo.yaml)
+  -u, --hostname string   hostname of your tmobile trashcan (default "http://192.168.12.1")
+  -p, --targets strings   List of hostnames to target with ping test (default [www.google.com,github.com])
+  -s, --timeout int       timeout in seconds for outbound requests (default 15)
+  -w, --workers int       number of workers for pingers (default 2)
+```
+
+```
 === GOMO 0.0.3 =================================================
 === LTE ========================================================
   RSSI:                       -69
@@ -72,28 +91,67 @@ The quick run mode is accessible via the `show` command, and does a single pass 
 ## Alignment
 Alignment mode, accessible via `align` shows a continuous time series graph of LTE and 5G metrics to help align an antenna.
 
-![Alignment](static/alignment.png)
+```
+$ gomo align --help
+Continuously fetch data and display timeseries CLI charts.
+Useful for aligning antennas.
+
+Usage:
+  gomo align [flags]
+
+Flags:
+  -h, --help       help for align
+  -x, --poll int   How often to fetch data and redraw (default 1)
+  -z, --silent     Silence cell ID for screenshots (avoid leaking location data unintentionally)
+
+Global Flags:
+      --config string     config file (default is $HOME/.gomo.yaml)
+  -u, --hostname string   hostname of your tmobile trashcan (default "http://192.168.12.1")
+  -p, --targets strings   List of hostnames to target with ping test (default [www.google.com,github.com])
+  -s, --timeout int       timeout in seconds for outbound requests (default 15)
+  -w, --workers int       number of workers for pingers (default 2)
+```
+
+![Alignment](static/align.gif)
 
 ## Daemon datalogging
 Daemon mode, accessible via `daemon` is a background process - meant to be run by a systemd unit. This continuously scrapes data from the trashcan and surfaces it on a /metrics endpoint for prometheus to scrape.
 
 There is a rough prometheus/grafana setup configured with a dashboard meant for this data
 
+```
+$ gomo daemon --help
+Daemonized Gomo which will continuously run and insert
+discovered metrics into prometheus time series for graphing and
+historical analysis.
+
+Usage:
+  gomo daemon [flags]
+
+Flags:
+  -h, --help       help for daemon
+  -m, --port int   Port to bind metrics webserver to (default 2112)
+
+Global Flags:
+      --config string     config file (default is $HOME/.gomo.yaml)
+  -u, --hostname string   hostname of your tmobile trashcan (default "http://192.168.12.1")
+  -p, --targets strings   List of hostnames to target with ping test (default [www.google.com,github.com])
+  -s, --timeout int       timeout in seconds for outbound requests (default 15)
+  -w, --workers int       number of workers for pingers (default 2)
+```
+
 ![Grafana](static/grafana_dash.png)
 
 # TODO
 ## High Priority
-* Export more trashcan metrics to prometheus
 * Stub trashcan for tests with a fake json response
-* Improve daemon exit
 
 ## Low Priority
-* Lots of cleaning up and making code more coherent after rapid dev
 * Tighten up prometheus/grafana deployment
 * Docker container for gomo in docker-compose for quick launch
-* Configurable port for gomo metrics
 * Add internet speedtest metrics exporter
 * Add ping metrics exporter
+* Explore other cgi pages for more potential data points or metrics
 
 
 # Dependencies

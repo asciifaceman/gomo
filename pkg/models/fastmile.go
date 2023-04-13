@@ -61,6 +61,10 @@ func (f *FastmileReturn) BytesRecv() float64 {
 	return float64(f.Body.CellularStats[0].BytesReceived)
 }
 
+func (f *FastmileReturn) StatEthernet() *EthernetStats {
+	return f.Body.EthernetStats[0]
+}
+
 type FastmileRadioStatus struct {
 	ConnectionStatus []*ConnectionStatus `json:"connection_status"`
 	ApCfg            []*ApnCfg           `json:"apn_cfg"`

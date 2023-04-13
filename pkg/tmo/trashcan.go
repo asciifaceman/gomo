@@ -53,18 +53,14 @@ func NewTrashcan(hostname string, timeout time.Duration) (*Trashcan, error) {
 }
 
 // FetchRadioStatusAsync is for running in a goroutine, calls FetchRadioStatus
-func (t *Trashcan) FetchRadioStatusAsync(wg *sync.WaitGroup, ret chan *models.FastmileReturn) {
+func (t *Trashcan) FetchRadioStatusAsync(wg *sync.WaitGroup, ret chan<- *models.FastmileReturn) {
 	defer wg.Done()
-	response := &models.FastmileReturn{}
 
 	data, err := t.FetchRadioStatus()
-	if err != nil {
-		response.Error = err
-		ret <- response
-		return
+	response := &models.FastmileReturn{
+		Body:  data,
+		Error: err,
 	}
-
-	response.Body = data
 
 	ret <- response
 }

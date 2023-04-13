@@ -1,4 +1,4 @@
-package daemon
+package clients
 
 import (
 	"context"
@@ -36,7 +36,7 @@ type Daemon struct {
 
 // New returns a newly configured daemon ready to start
 // A port or timeout of 0 will use default values (2112 & 15 respectively)
-func New(hostname string, port int, timeout int) (*Daemon, error) {
+func NewDaemon(hostname string, port int, timeout int) (*Daemon, error) {
 	requestTimeout := time.Duration(timeout) * time.Second
 
 	t, err := tmo.NewTrashcan(hostname, requestTimeout)

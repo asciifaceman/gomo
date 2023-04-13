@@ -6,7 +6,7 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/asciifaceman/gomo/pkg/daemon"
+	"github.com/asciifaceman/gomo/pkg/clients"
 	"github.com/spf13/cobra"
 )
 
@@ -22,7 +22,7 @@ var daemonCmd = &cobra.Command{
 discovered metrics into prometheus time series for graphing and
 historical analysis.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		d, err := daemon.New(hostname, serverPort, reqtimeout)
+		d, err := clients.NewDaemon(hostname, serverPort, reqtimeout)
 		if err != nil {
 			fmt.Printf("Failed to setup daemon: %v\n", err)
 			return
