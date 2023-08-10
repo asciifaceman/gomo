@@ -1,0 +1,27 @@
+{
+    "folders": [
+        {
+            "path": ".."
+        }
+    ],
+    "settings": {
+        "cSpell.words": [
+            "asciifaceman",
+            "Corbett",
+            "Daemonized",
+            "datalogging",
+            "davecgh",
+            "GOARCH",
+            "gomo",
+            "ldflags",
+            "RSRP",
+            "RSRQ",
+            "RSSI",
+            "speedtest",
+            "timeseries",
+            "Tmobile",
+            "wangyoucao",
+            "webserver"
+        ]
+    }
+}
